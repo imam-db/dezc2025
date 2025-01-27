@@ -20,10 +20,23 @@ Run docker with the `python:3.12.8` image in an interactive mode, use the entryp
 
 What's the version of `pip` in the image?
 
-- 24.3.1
+- **24.3.1**
 - 24.2.1
 - 23.3.1
 - 23.2.1
+
+```docker
+docker run -it python:3.12.8 bash
+```
+
+Explanation :
+
+- `docker run` : starts a new docker container
+- `it` : enables interactive mode with a pseudo-TTY
+- `python:3.12.8` : specifies the docker image to use
+- `bash` : entrypoint `bash`
+
+![docker run](./q01.PNG)
 
 
 ## Question 2. Understanding Docker networking and docker-compose
