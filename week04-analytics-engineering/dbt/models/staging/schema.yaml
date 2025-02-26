@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: staging
+    database: dezoomcamp2025-449022
+    schema: dezc2025_analytic
+      
+    tables:
+      - name: greentrip
+      - name: yellowtrip
+      - name: fhvtrip
