@@ -18,6 +18,7 @@ select
     sr_flag,
     affiliated_base_number
 from {{ source('staging','fhvtrip') }}
+WHERE dispatching_base_num IS NOT NULL
 
 
 -- dbt build --select <model_name> --vars '{'is_test_run': 'false'}'
