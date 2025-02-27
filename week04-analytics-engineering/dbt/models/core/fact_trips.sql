@@ -20,23 +20,18 @@ trips_union AS (
     UNION ALL
     SELECT *
     FROM yellow_tripdata
-),
-dim_zones AS (
-    SELECT *
-    FROM {{ ref('dim_zones') }}
-    WHERE borough != 'Unknown'
 )
 SELECT tu.tripid, 
     tu.vendorid, 
     tu.service_type,
     tu.ratecodeid, 
     tu.pickup_locationid, 
-    pickup_zone.borough as pickup_borough, 
-    pickup_zone.zone as pickup_zone, 
-    tu.dropoff_locationid,
-    dropoff_zone.borough as dropoff_borough, 
-    dropoff_zone.zone as dropoff_zone,  
+    tu.dropoff_locationid,  
     tu.pickup_datetime, 
+    FORMAT_DATE('%Y', tu.pickup_datetime) AS period_year,
+    FORMAT_DATE('%m', tu.pickup_datetime) AS period_month,
+    FORMAT_DATE('%Q', tu.pickup_datetime) AS period_quarter,
+    FORMAT_DATE('%Y-%Q', tu.pickup_datetime) AS period_year_quarter,
     tu.dropoff_datetime, 
     tu.store_and_fwd_flag, 
     tu.passenger_count, 
@@ -53,7 +48,3 @@ SELECT tu.tripid,
     tu.payment_type, 
     tu.payment_type_description
 FROM trips_union AS tu
-INNER JOIN dim_zones AS pickup_zone
-ON tu.pickup_locationid = pickup_zone.locationid
-INNER JOIN dim_zones AS dropoff_zone
-ON tu.dropoff_locationid = dropoff_zone.locationid
