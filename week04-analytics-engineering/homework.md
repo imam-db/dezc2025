@@ -46,7 +46,7 @@ from {{ source('raw_nyc_tripdata', 'ext_green_taxi' ) }}
 
 - `select * from dtc_zoomcamp_2025.raw_nyc_tripdata.ext_green_taxi`
 - `select * from dtc_zoomcamp_2025.my_nyc_tripdata.ext_green_taxi`
-- `select * from myproject.raw_nyc_tripdata.ext_green_taxi`
+- `select * from myproject.raw_nyc_tripdata.ext_green_taxi` **
 - `select * from myproject.my_nyc_tripdata.ext_green_taxi`
 - `select * from dtc_zoomcamp_2025.raw_nyc_tripdata.green_taxi`
 
@@ -69,7 +69,7 @@ What would you change to accomplish that in a such way that command line argumen
 - Add `ORDER BY pickup_datetime DESC` and `LIMIT {{ var("days_back", 30) }}`
 - Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ var("days_back", 30) }}' DAY`
 - Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ env_var("DAYS_BACK", "30") }}' DAY`
-- Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ var("days_back", env_var("DAYS_BACK", "30")) }}' DAY`
+- Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ var("days_back", env_var("DAYS_BACK", "30")) }}' DAY` **
 - Update the WHERE clause to `pickup_datetime >= CURRENT_DATE - INTERVAL '{{ env_var("DAYS_BACK", var("days_back", "30")) }}' DAY`
 
 
@@ -77,7 +77,7 @@ What would you change to accomplish that in a such way that command line argumen
 
 Considering the data lineage below **and** that taxi_zone_lookup is the **only** materialization build (from a .csv seed file):
 
-![image](./homework_q2.png)
+![image](homework_q2.png)
 
 Select the option that does **NOT** apply for materializing `fct_taxi_monthly_zone_revenue`:
 
@@ -85,7 +85,7 @@ Select the option that does **NOT** apply for materializing `fct_taxi_monthly_zo
 - `dbt run --select +models/core/dim_taxi_trips.sql+ --target prod`
 - `dbt run --select +models/core/fct_taxi_monthly_zone_revenue.sql`
 - `dbt run --select +models/core/`
-- `dbt run --select models/staging/+`
+- `dbt run --select models/staging/+` **
 
 
 ### Question 4: dbt Macros and Jinja
@@ -119,11 +119,11 @@ And use on your staging, dim_ and fact_ models as:
 ```
 
 That all being said, regarding macro above, **select all statements that are true to the models using it**:
-- Setting a value for  `DBT_BIGQUERY_TARGET_DATASET` env var is mandatory, or it'll fail to compile
+- Setting a value for  `DBT_BIGQUERY_TARGET_DATASET` env var is mandatory, or it'll fail to compile **
 - Setting a value for `DBT_BIGQUERY_STAGING_DATASET` env var is mandatory, or it'll fail to compile
-- When using `core`, it materializes in the dataset defined in `DBT_BIGQUERY_TARGET_DATASET`
-- When using `stg`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET`
-- When using `staging`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET`
+- When using `core`, it materializes in the dataset defined in `DBT_BIGQUERY_TARGET_DATASET` **
+- When using `stg`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET` **
+- When using `staging`, it materializes in the dataset defined in `DBT_BIGQUERY_STAGING_DATASET`, or defaults to `DBT_BIGQUERY_TARGET_DATASET` **
 
 
 ## Serious SQL
@@ -146,11 +146,36 @@ You might want to add some new dimensions `year` (e.g.: 2019, 2020), `quarter` (
 
 Considering the YoY Growth in 2020, which were the yearly quarters with the best (or less worse) and worst results for green, and yellow
 
-- green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q2, worst: 2020/Q1}
+- green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q2, worst: 2020/Q1} **
 - green: {best: 2020/Q2, worst: 2020/Q1}, yellow: {best: 2020/Q3, worst: 2020/Q4}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q2, worst: 2020/Q1}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q1, worst: 2020/Q2}
 - green: {best: 2020/Q1, worst: 2020/Q2}, yellow: {best: 2020/Q3, worst: 2020/Q4}
+
+SQL
+
+```sql
+WITH cte AS
+(
+SELECT *,
+  ROW_NUMBER() OVER(PARTITION BY service_type ORDER BY rev_growth) AS ordering_number
+FROM `dbt_imamdb.fct_taxi_trips_quarterly_revenue`
+WHERE period_year='2020'
+)
+SELECT service_type,
+  period_year,
+  period_quarter,
+  period_year_quarter,
+  rev_growth,
+  CASE WHEN ordering_number = 1 THEN 'best' 
+    WHEN ordering_number = 4 THEN 'worst' END AS status_growth
+FROM cte
+WHERE ordering_number IN (1,4)
+```
+
+Result
+
+![result](./q5_a.PNG)
 
 
 ### Question 6: P97/P95/P90 Taxi Monthly Fare
@@ -166,6 +191,19 @@ Now, what are the values of `p97`, `p95`, `p90` for Green Taxi and Yellow Taxi, 
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 52.0, p95: 37.0, p90: 25.5}
 - green: {p97: 40.0, p95: 33.0, p90: 24.5}, yellow: {p97: 31.5, p95: 25.5, p90: 19.0}
 - green: {p97: 55.0, p95: 45.0, p90: 26.5}, yellow: {p97: 52.0, p95: 25.5, p90: 19.0}
+
+SQL
+
+```sql
+SELECT *
+FROM `dbt_imamdb.fct_taxi_trips_monthly_fare_p95`
+WHERE period_year = '2020'
+AND period_month = '04'
+```
+
+Result
+
+![result](./q6_a.PNG)
 
 
 ### Question 7: Top #Nth longest P90 travel time Location for FHV
@@ -187,6 +225,34 @@ For the Trips that **respectively** started from `Newark Airport`, `SoHo`, and `
 - LaGuardia Airport, Saint Albans, Howard Beach
 - LaGuardia Airport, Rosedale, Bath Beach
 - LaGuardia Airport, Yorkville East, Greenpoint
+
+SQL
+
+```sql
+WITH cte AS
+(
+  SELECT DISTINCT pickup_zone,
+    dropoff_zone,
+    ROUND(p90,2) AS p90
+  FROM `dbt_imamdb.fct_fhv_monthly_zone_traveltime_p90`
+  WHERE pickup_zone IN ('Newark Airport', 'SoHo', 'Yorkville East')
+  AND period_year = '2019'
+  AND period_month = '11'
+),
+cte_rn AS
+(
+  SELECT *,
+    ROW_NUMBER() OVER(PARTITION BY pickup_zone ORDER BY p90 DESC) AS rn
+  FROM cte
+)
+SELECT *
+FROM cte_rn
+WHERE rn = 2
+```
+
+Result
+
+![result](./q7_a.PNG)
 
 
 ## Submitting the solutions

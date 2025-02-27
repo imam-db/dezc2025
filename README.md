@@ -13,3 +13,8 @@
 ## Week 03 - Data Warehouse
 
 - [Homework](./week03-data-warehouse/homework.md)
+
+
+## Week 04 - Analytics Engineering
+
+- [Homework](./week04-analytics-engineering/homework.md)
